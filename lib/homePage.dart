@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
 
 
     _stoneController.addListener(() {
-      if (_character.value == 250 && _stone.value.round() == 150){
+      if (_character.value == 250 && (_stone.value > 148 && _stone.value < 152)){
         //print("test");
         setState(() {
           collision = true;
@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
         });
       }
 
-      if (_stone.value.round() == 150 && _character.value != 250) {
+      if ( (_stone.value > 148 && _stone.value < 152) && _character.value != 250) {
         setState(() {
           addScore = true;
         });

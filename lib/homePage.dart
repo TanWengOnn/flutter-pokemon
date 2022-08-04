@@ -10,38 +10,71 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
-  late AnimationController _controller;
+  late AnimationController _characterController;
+  late AnimationController _stoneController;
+  late Animation _character;
+  late Animation _stone;
+  bool jump = false;
+  bool collision = false;
+  bool addScore = false;
+  int score = 0;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController( vsync: this, duration: const Duration(milliseconds: 1000));
-    _controller.addListener(() {
-      //also possible to listen for changes with a listener
+    _characterController = AnimationController( vsync: this, duration: const Duration(milliseconds: 200));
+    _stoneController = AnimationController( vsync: this, duration: const Duration(milliseconds: 1000));
+    _character = Tween<double>(begin: 250, end: 150).animate(_characterController);
+    _stone = Tween<double>(begin: 0, end: 300).animate(_stoneController);
+
+    _stoneController.forward();
+    _stoneController.repeat(reverse: true);
+
+
+    _stoneController.addListener(() {
+      if (_character.value == 250 && _stone.value.round() == 150){
+        //print("test");
+        setState(() {
+          collision = true;
+        });
+      } else {
+        setState(() {
+          collision = false;
+        });
+      }
+
+      if (_stone.value.round() == 150 && _character.value != 250) {
+        setState(() {
+          addScore = true;
+        });
+      } else {
+        setState(() {
+          addScore = false;
+        });
+      }
 
     });
   }
 
-  bool jump = false;
-
-  double? x, y;
-
-  GlobalKey key = GlobalKey();
-  void getPosition(GlobalKey key) {
-    RenderBox? box = key.currentContext?.findRenderObject() as RenderBox?;
-    Offset? position = box?.localToGlobal(Offset.zero);
-        x = position?.dx;
-        y = position?.dx;
+  @override
+  void dispose() {
+    _stoneController.dispose();
+    _characterController.dispose();
+    super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
-    // while(true){
-    //   print(x);
-    // }
+    if (collision){
+      score -= 1;
+      print("Score: $score");
+    }
 
+    if (addScore){
+      score += 1;
+      print("Score: $score");
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text("Pokemon Jump"),
@@ -50,57 +83,90 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ImageContainer(gameImage:"assets/jump.png"),
-            // ImageContainer(gameImage:"assets/stone.png"),
+            Text("Score: $score"),
             Container(
               width: 400,
               height: 500,
               color: Colors.greenAccent,
               child: Stack(children: [
-                AnimatedPositioned(
-                  key: key,
-                  width: 100,
-                  height: 100,
-                  top: jump ? 100 : 250,
-                  left: 150,
-                  duration: const Duration(milliseconds: 100),
-                  //curve: Curves.fastOutSlowIn,
-                  child:  Image(image: AssetImage("assets/jump.png")),
+                AnimatedBuilder(
+                  child: jump ? ImageContainer(gameImage: "assets/jump.png") : ImageContainer(gameImage: "assets/stay.png") ,
+                  animation: _character,
+                  builder: (_, Widget? child) {
+                    if (jump) {
+                      //print(_character.value);
+                      _characterController.forward();
+                    } else {
+                      _characterController.reverse();
+                    }
+                    return Transform.translate(
+                      offset: Offset(
+                          150, _character.value),
+                      child: child,
+                    );
+                  },
                 ),
-                AnimatedPositioned(
-                  width: 100,
-                  height: 100,
-                  top: 285,
-                  left: 300,  // 0 - 300
-                  duration: const Duration(seconds: 2),
-                  curve: Curves.fastOutSlowIn,
-                  child:  Image(image: AssetImage("assets/stone.png")),
+                AnimatedBuilder(
+                  child: ImageContainer(gameImage: "assets/stone.png"),
+                  animation: _stone,
+                  builder: (_, Widget? child) {
+                    //print("stone: ${_stone.value}");
+                    return Transform.translate(
+                      offset: Offset(_stone.value, 285),
+                      child: child,
+                    );
+                  },
                 ),
               ]),
             ),
-            Container(
-              color: Colors.black,
-              width: 100,
-              height: 50,
-              child: GestureDetector(
-                onPanDown: (details) {
-                  getPosition(key);
-                  setState(() {
-                    jump = true;
-                    print(jump);
-                    print("position: $x");
-                  });
-                },
-                onPanEnd: (details) {
-                  getPosition(key);
-                  setState(() {
-                    jump = false;
-                    print(jump);
-                    print("position: $x");
-                  });
-                },
-              ),
-            )
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Container(
+                  color: Colors.blueAccent,
+                  width: 100,
+                  height: 50,
+                  child: Stack(
+                    children: [
+                      Center(child: Text("Jump")),
+                      GestureDetector(
+                        onPanDown: (details) {
+                          setState(() {
+                            jump = true;
+                            //print(jump);
+                          });
+                        },
+                        onPanEnd: (details) {
+                          setState(() {
+                            jump = false;
+                            //print(jump);
+                          });
+                        },
+                      ),
+                    ]
+                  ),
+                ),
+                Container(
+                  color: Colors.blueAccent,
+                  width: 100,
+                  height: 50,
+                  child: Stack(
+                      children: [
+                        Center(child: Text("Reset")),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              Navigator.pushReplacementNamed(context, '/');
+                              Navigator.popAndPushNamed(context, '/');
+                            });
+                          },
+                        )
+                      ]
+                  ),
+                )
+              ],
+            ),
+
           ],
         ),
       ),

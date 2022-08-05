@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
   void initState() {
     super.initState();
 
-    _characterController = AnimationController( vsync: this, duration: const Duration(milliseconds: 200));
+    _characterController = AnimationController( vsync: this, duration: const Duration(milliseconds: 150));
     _stoneController = AnimationController( vsync: this, duration: const Duration(milliseconds: 1000));
     _character = Tween<double>(begin: 250, end: 150).animate(_characterController);
     _stone = Tween<double>(begin: 0, end: 300).animate(_stoneController);
@@ -33,6 +33,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
 
 
     _stoneController.addListener(() {
+      if (_character.value == 150){
+        setState(() {
+          jump = false;
+        });
+      }
+
       if (_character.value == 250 && (_stone.value > 148 && _stone.value < 152)){
         //print("test");
         setState(() {
@@ -130,18 +136,24 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin{
                     children: [
                       Center(child: Text("Jump")),
                       GestureDetector(
-                        onPanDown: (details) {
+                        onTap: () {
                           setState(() {
-                            jump = true;
-                            //print(jump);
-                          });
-                        },
-                        onPanEnd: (details) {
-                          setState(() {
-                            jump = false;
-                            //print(jump);
-                          });
-                        },
+                          jump = true;
+                          //print(jump);
+                        });
+                      },
+                        // onPanDown: (details) {
+                        //   setState(() {
+                        //     jump = true;
+                        //     //print(jump);
+                        //   });
+                        // },
+                        // onPanEnd: (details) {
+                        //   setState(() {
+                        //     jump = false;
+                        //     //print(jump);
+                        //   });
+                        // },
                       ),
                     ]
                   ),
